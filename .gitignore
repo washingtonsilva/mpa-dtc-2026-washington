@@ -60,3 +60,5 @@ System Volume Information/
 .env
 .env.*
 !.env.example
+
+**/*.quarto_ipynb

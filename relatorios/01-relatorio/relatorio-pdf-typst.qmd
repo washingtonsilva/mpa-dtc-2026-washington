@@ -1,0 +1,113 @@
+---
+title: "Panorama das vendas por município em 2023"
+author: "Washington S. Silva"
+date: 2026-08-17
+format: typst
+execute:
+  warning: false
+  message: false
+  echo: false
+---
+
+
+```{r}
+#| label: importar-dados
+
+# define formato dos números exibidos
+options (digits = 5, scipen = 999)
+
+# carrega os pacotes usados
+library(here)
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(gt)
+
+# define o caminho relativo com here
+caminho_csv <- here("dados/dados-vendas.csv")
+# importa o arquivo de dados
+dados_vendas <- read_csv(caminho_csv)
+```
+
+
+# Contexto
+
+A coordenação comercial precisa de uma visão consolidada das vendas
+registradas em quatro municípios para orientar análises posteriores. Este
+relatório descreve a distribuição das transações e da receita; não avalia
+lucratividade, eficiência das equipes ou potencial de mercado.
+
+
+
+# Dados e método
+
+A base contém transações realizadas entre 2 de janeiro e 31 de dezembro de
+2023. Cada linha identifica a data, o município, o representante, o produto,
+a quantidade vendida, o preço unitário e a receita da transação.
+
+Os dados foram simulados pelo professor. Para cada município, foram calculados
+o número de transações, a receita total, a participação na receita registrada e
+o valor médio por transação.
+
+
+
+# Resultados
+
+
+```{r}
+#| label: calcular-indicadores
+
+# pipeline para calcular os indicadores
+receita_por_cidade <- dados_vendas |>
+  group_by(cidade) |>
+  summarise(
+    transacoes = n(),
+    receita_total = sum(receita),
+    valor_medio = mean(receita)
+  ) |>
+  mutate(participacao = receita_total / sum(receita_total)) |>
+  arrange(desc(receita_total))
+```
+
+
+```{r}
+#| label: tbl-vendas-municipio
+#| tbl-cap: "Síntese das vendas registradas por município"
+
+# seleciona os indicadores exibidos na tabela
+receita_por_cidade |>
+  select(
+    Município = cidade,
+    Transações = transacoes,
+    `Receita total` = receita_total,
+    Participação = participacao,
+    `Valor médio` = valor_medio
+  ) |>
+
+  # cria uma tabela com o pacote gt
+  gt() |>
+  fmt_integer(columns = Transações, locale = "pt-BR") |>
+  fmt_currency(
+    columns = c(`Receita total`, `Valor médio`),
+    currency = "BRL",
+    locale = "pt-BR"
+  ) |>
+  fmt_percent(columns = Participação, decimals = 2, locale = "pt-BR") |>
+  cols_align(align = "left", columns = Município) |>
+  opt_row_striping() |>
+  tab_source_note(source_note = "Fonte: dados simulados para fins didáticos.")
+```
+
+
+Como mostra a @tbl-vendas-municipio, Formiga reúne 499 transações e 49,19%
+da receita registrada, enquanto Arcos reúne 293 transações e 28,80%. Pimenta 
+apresenta o maior valor médio por transação, mas esse resultado se apoia em 
+apenas 102 registros e não permite concluir que o município teve melhor
+desempenho.
+
+
+
+
+
+
+
